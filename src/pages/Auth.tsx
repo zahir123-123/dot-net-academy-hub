@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -12,6 +13,10 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [showRegistrationAlert, setShowRegistrationAlert] = useState(false);
+  
+  // Fixed password
+  const fixedPassword = 'L&c"XfeM{.,^x*t';
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,20 +24,21 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-          },
-        });
-        if (error) throw error;
-        toast.success('Check your email for the confirmation link!');
+        // Show alert that registration is closed
+        setShowRegistrationAlert(true);
+        setIsLoading(false);
+        return;
       } else {
+        // Login with fixed password
+        if (password !== fixedPassword) {
+          throw new Error('Invalid password. Please try again.');
+        }
+        
         const { error } = await supabase.auth.signInWithPassword({
           email,
-          password,
+          password: fixedPassword,
         });
+        
         if (error) throw error;
         navigate('/');
       }
@@ -73,6 +79,9 @@ export default function Auth() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            {!isSignUp && (
+              <p className="text-xs text-gray-500 mt-1">Use the provided password to log in</p>
+            )}
           </div>
           <Button className="w-full" type="submit" disabled={isLoading}>
             {isLoading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
@@ -89,6 +98,26 @@ export default function Auth() {
           </button>
         </div>
       </div>
+
+      {/* Registration Closed Alert Dialog */}
+      <AlertDialog open={showRegistrationAlert} onOpenChange={setShowRegistrationAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Registration Closed</AlertDialogTitle>
+            <AlertDialogDescription>
+              We're not accepting new registrations at this time. Please check back later or contact the administrator for access.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => {
+              setShowRegistrationAlert(false);
+              setIsSignUp(false);
+            }}>
+              Go back to login
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
