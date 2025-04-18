@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { Video } from '@/types';
 
@@ -19,29 +18,36 @@ const formatVideoResponse = (item: any): Video => {
 
 // Get videos from a specific playlist
 export const getPlaylistVideos = async (playlistId: string): Promise<Video[]> => {
+  console.log('Fetching playlist videos for:', playlistId);
   try {
     const response = await axios.get(`${BASE_URL}/playlistItems`, {
       params: {
         part: 'snippet',
         maxResults: 50,
         playlistId,
-        key: API_KEY
+        key: API_KEY,
       }
     });
 
+    console.log('Playlist response:', response.data);
+
     // Get video IDs for duration info
-    const videoIds = response.data.items.map((item: any) => 
-      item.snippet.resourceId.videoId
-    ).join(',');
+    const videoIds = response.data.items
+      .map((item: any) => item.snippet.resourceId.videoId)
+      .join(',');
+
+    console.log('Video IDs:', videoIds);
 
     // Get video details for duration info
     const detailsResponse = await axios.get(`${BASE_URL}/videos`, {
       params: {
         part: 'contentDetails',
         id: videoIds,
-        key: API_KEY
+        key: API_KEY,
       }
     });
+
+    console.log('Details response:', detailsResponse.data);
 
     // Map duration to videos
     const durationMap = detailsResponse.data.items.reduce((acc: any, item: any) => {
@@ -54,12 +60,12 @@ export const getPlaylistVideos = async (playlistId: string): Promise<Video[]> =>
       return {
         ...formatVideoResponse(item),
         id: videoId,
-        duration: durationMap[videoId]
+        duration: durationMap[videoId],
       };
     });
   } catch (error) {
     console.error('Error fetching playlist videos:', error);
-    return [];
+    throw error;
   }
 };
 
