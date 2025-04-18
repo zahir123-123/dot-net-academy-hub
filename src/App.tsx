@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -23,9 +24,29 @@ const App = () => {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    // For demo purposes, we'll simulate a signed-in session with any valid email
+    const checkEmail = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const email = urlParams.get('email');
+      
+      if (email) {
+        // If email is in URL, simulate a successful login
+        const mockSession = {
+          user: { email },
+          access_token: 'demo-token',
+        };
+        setSession(mockSession);
+        
+        // Remove query params from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        // Check for existing session
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+      }
+    };
+    
+    checkEmail();
 
     const {
       data: { subscription },

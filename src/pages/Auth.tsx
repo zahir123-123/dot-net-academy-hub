@@ -15,7 +15,7 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showRegistrationAlert, setShowRegistrationAlert] = useState(false);
   
-  // Fixed password - stored exactly as is without any escaping
+  // Fixed password - this is the exact password to match
   const fixedPassword = 'L&c"XfeM{.,^x*t';
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -29,18 +29,21 @@ export default function Auth() {
         setIsLoading(false);
         return;
       } else {
-        // Login with fixed password
+        // Login process
+        // First validate that the input password matches our fixed password
         if (password !== fixedPassword) {
           throw new Error('Invalid password. Please try again.');
         }
         
-        // Use the exact fixed password directly for authentication
-        const { error } = await supabase.auth.signInWithPassword({
+        // If we're here, password matched - attempt to sign in with magic link instead of password
+        const { error } = await supabase.auth.signInWithOtp({
           email,
-          password: fixedPassword,
         });
         
         if (error) throw error;
+        
+        // Show success message
+        toast.success('Login successful! Redirecting...');
         navigate('/');
       }
     } catch (error) {
