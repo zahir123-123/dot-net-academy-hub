@@ -15,7 +15,7 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showRegistrationAlert, setShowRegistrationAlert] = useState(false);
   
-  // Fixed password
+  // Fixed password - stored exactly as is without any escaping
   const fixedPassword = 'L&c"XfeM{.,^x*t';
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -34,6 +34,7 @@ export default function Auth() {
           throw new Error('Invalid password. Please try again.');
         }
         
+        // Use the exact fixed password directly for authentication
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password: fixedPassword,
@@ -44,6 +45,7 @@ export default function Auth() {
       }
     } catch (error) {
       toast.error(error.message);
+      console.error('Authentication error:', error);
     } finally {
       setIsLoading(false);
     }
